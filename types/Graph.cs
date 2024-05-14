@@ -1,6 +1,7 @@
 ﻿using FDG.util;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -13,7 +14,11 @@ namespace FDG.types
         internal Link[] Links { get; set; } = [];
         internal HashSet<Node> Nodes { get; set; } = new HashSet<Node>();
 
-        internal int NodeSize = 50;
+        private const int NODE_SIZE = 30;
+        const int UNFOLD_MAX_DISTANCE = 200;
+        const float RNG_ANGLE_RANGE = (float)(Math.PI / 180) * 90;
+
+        public int NodeSize { get { return NODE_SIZE; } }
 
         Node FindOrCreate(string name)
         {
@@ -25,14 +30,58 @@ namespace FDG.types
             return node;
         }
 
+        Vector2 getRelativeDirection(Node node)
+        {
+            if (node.Parent == null)
+            {
+                throw new Exception($"Node {node.Name} has no Parent");
+            }
+            var direction = node.Position - node.Parent.Position;
+            //var normalized = Vector2.Normalize(direction);
+            return direction;
+        }
+        /// <summary>
+        /// tilts Vector2 by random angle in range(-radians/2 , radians/2)
+        /// </summary>
+        /// <param name="direction">Vector to tilt</param>
+        /// <param name="angle"> </param>
+        /// <returns></returns>
+        Vector2 tiltDirection(Vector2 direction, float radians)
+        {
+            var rng = new Random();
+            float angle = (float)rng.NextDouble() * radians / 2 + radians / 2;
+            //angle += MathF.Atan2(0 - direction.Y, 1 - direction.X);
+            //var tiltedDir = direction + new Vector2(MathF.Cos(angle), MathF.Sin(angle));
+            var x = direction.X * MathF.Cos(angle) - direction.Y * MathF.Sin(angle);
+            var y = direction.X * MathF.Sin(angle) + direction.Y * MathF.Cos(angle);
+            var tiltedDir = new Vector2(x, y);
+            return tiltedDir;
+            //return direction;
+        }
+
         public void Unfold(Size size)
         {
-            var rnd = new Random();
             foreach (Node node in Nodes)
             {
-                var x = rnd.Next(NodeSize / 2, size.Width - NodeSize);
-                var y = rnd.Next(NodeSize / 2, (int)(size.Height - NodeSize * 1.5));
-                node.Position = new Vector2(x, y);
+                if (node.Parent?.Parent != null)
+                {
+                    var direction = getRelativeDirection(node.Parent);
+                    node.Position = node.Parent.Position + tiltDirection(direction, RNG_ANGLE_RANGE);
+                }
+                else if (node.Parent != null)
+                {
+                    var rnd = new Random();
+                    node.Position = node.Parent.Position +
+                        new Vector2(rnd.Next(-UNFOLD_MAX_DISTANCE, UNFOLD_MAX_DISTANCE),
+                                    rnd.Next(-UNFOLD_MAX_DISTANCE, UNFOLD_MAX_DISTANCE));
+                }
+                else
+                {
+                    var rnd = new Random();
+                    var x = rnd.Next(NodeSize / 2, size.Width - NodeSize);
+                    var y = rnd.Next(NodeSize / 2, (int)(size.Height - NodeSize * 1.5));
+                    node.Position = new Vector2(x, y);
+                }
             }
         }
 
@@ -47,23 +96,8 @@ namespace FDG.types
                 {
                     var cNode = FindOrCreate(child);
                     Nodes.Add(cNode);
-                    Links = [.. Links, new Link(parent, cNode)]; ;
+                    Links = [.. Links, new Link(parent, cNode)];
                     Console.WriteLine($"Constructor: {Links}");
-                }
-            }
-        }
-        internal Graph(Size size, string url)
-        {
-            Dictionary<string, string[]> links = U.getLinks(url);
-            foreach (var link in links)
-            {
-                var parent = new Node(link.Key);
-                Nodes.Add(parent);
-                foreach (var child in link.Value)
-                {
-                    var cNode = new Node(child);
-                    Nodes.Add(cNode);
-                    Links.Append(new Link(parent, cNode));
                 }
             }
         }

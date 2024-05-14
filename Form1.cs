@@ -7,12 +7,29 @@ namespace FDG
 {
     public partial class Form1 : Form
     {
-        Graph FDGraph;
+        ForceDirectedGraph FDGraph;
+
+        const int UPDATE_MILISECONDS = 30;
         public Form1()
         {
             InitializeComponent();
-            FDGraph = new Graph(@"data\links.txt");
+            FDGraph = new(@"data\links.txt");
             FDGraph.Unfold(Size);
+
+            DoubleBuffered = true;
+
+            var timer = new System.Windows.Forms.Timer();
+            timer.Interval = UPDATE_MILISECONDS;
+            timer.Tick += CycleUpdate;
+            timer.Start();
+        }
+
+        private void CycleUpdate(object sender, EventArgs e)
+        {
+            FDGraph.ArrangeStep();
+            Console.WriteLine($"Timer Tick {e}");
+            this.Invalidate();
+
         }
 
         void DrawGraph(PaintEventArgs e)
@@ -25,10 +42,10 @@ namespace FDG
                     node.Position.X - FDGraph.NodeSize / 2, node.Position.Y - FDGraph.NodeSize / 2,
                     FDGraph.NodeSize, FDGraph.NodeSize);
             }
-            foreach (Link link in FDGraph.Links)
+            foreach (Link spring in FDGraph.Links)
             {
-                var start = link.Start.Position;
-                var end = link.End.Position;
+                var start = spring.Start.Position;
+                var end = spring.End.Position;
                 Console.WriteLine($"Drawing {start}-{end}"); // !!!
                 e.Graphics.DrawLine(pen, start.X, start.Y, end.X, end.Y);
             }
