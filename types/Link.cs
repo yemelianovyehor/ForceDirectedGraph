@@ -12,6 +12,7 @@ namespace FDG.types
         public Node Start { get; private set; }
         public Node End { get; private set; }
 
+
         public float Length
         {
             get
@@ -19,6 +20,10 @@ namespace FDG.types
                 return (Start.Position - End.Position).Length();
             }
 
+        }
+        public override string ToString()
+        {
+            return $"{Start.Name}~{End.Name}";
         }
         public Link(Node startNode, Node endNode)
         {

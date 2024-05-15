@@ -1,5 +1,6 @@
 using FDG.types;
 using FDG.util;
+using System.Drawing.Drawing2D;
 using System.Numerics;
 using System.Runtime.InteropServices;
 
@@ -8,6 +9,7 @@ namespace FDG
     public partial class Form1 : Form
     {
         ForceDirectedGraph FDGraph;
+        bool Play = false;
 
         const int UPDATE_MILISECONDS = 30;
         public Form1()
@@ -18,16 +20,19 @@ namespace FDG
 
             DoubleBuffered = true;
 
-            var timer = new System.Windows.Forms.Timer();
-            timer.Interval = UPDATE_MILISECONDS;
-            timer.Tick += CycleUpdate;
-            timer.Start();
+
+
+            //var timer = new System.Windows.Forms.Timer();
+            //timer.Interval = UPDATE_MILISECONDS;
+            //timer.Tick += CycleUpdate;
+            //timer.Start();
         }
 
         private void CycleUpdate(object sender, EventArgs e)
         {
+            //Console.WriteLine("---CYCLE---");
             FDGraph.ArrangeStep();
-            Console.WriteLine($"Timer Tick {e}");
+            //Console.WriteLine($"Timer Tick {e}");
             this.Invalidate();
 
         }
@@ -35,7 +40,9 @@ namespace FDG
         void DrawGraph(PaintEventArgs e)
         {
             var brush = new SolidBrush(Color.Black);
-            var pen = new Pen(Color.Red, 2);
+            var pen = new Pen(Color.Red, 3);
+            pen.EndCap = LineCap.ArrowAnchor;
+
             foreach (Node node in FDGraph.Nodes)
             {
                 e.Graphics.FillEllipse(brush,
@@ -46,7 +53,7 @@ namespace FDG
             {
                 var start = spring.Start.Position;
                 var end = spring.End.Position;
-                Console.WriteLine($"Drawing {start}-{end}"); // !!!
+                //Console.WriteLine($"Drawing {start}-{end}"); // !!!
                 e.Graphics.DrawLine(pen, start.X, start.Y, end.X, end.Y);
             }
         }
@@ -58,6 +65,19 @@ namespace FDG
                 DrawGraph(e);
             };
 
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            if (Play)
+            {
+                return;
+            }
+            var timer = new System.Windows.Forms.Timer();
+            timer.Interval = UPDATE_MILISECONDS;
+            timer.Tick += CycleUpdate;
+            timer.Start();
+            Play = true;
         }
     }
 }

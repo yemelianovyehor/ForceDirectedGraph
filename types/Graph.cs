@@ -16,7 +16,7 @@ namespace FDG.types
 
         private const int NODE_SIZE = 30;
         const int UNFOLD_MAX_DISTANCE = 200;
-        const float RNG_ANGLE_RANGE = (float)(Math.PI / 180) * 90;
+        const float RNG_ANGLE_RANGE = (float)(Math.PI / 180) * 120;
 
         public int NodeSize { get { return NODE_SIZE; } }
 
@@ -45,11 +45,12 @@ namespace FDG.types
         /// </summary>
         /// <param name="direction">Vector to tilt</param>
         /// <param name="angle"> </param>
-        /// <returns></returns>
+        ///// <returns></returns>
         Vector2 tiltDirection(Vector2 direction, float radians)
         {
             var rng = new Random();
-            float angle = (float)rng.NextDouble() * radians / 2 + radians / 2;
+            //float angle = rng.Next(-(int)(radians*50), (int)(radians * 50)) / 100f;
+            float angle = (float)rng.NextSingle() * radians / 2 - radians / 2;
             //angle += MathF.Atan2(0 - direction.Y, 1 - direction.X);
             //var tiltedDir = direction + new Vector2(MathF.Cos(angle), MathF.Sin(angle));
             var x = direction.X * MathF.Cos(angle) - direction.Y * MathF.Sin(angle);
@@ -66,6 +67,7 @@ namespace FDG.types
                 if (node.Parent?.Parent != null)
                 {
                     var direction = getRelativeDirection(node.Parent);
+                    //var normalized = Vector2.Normalize(direction);
                     node.Position = node.Parent.Position + tiltDirection(direction, RNG_ANGLE_RANGE);
                 }
                 else if (node.Parent != null)
@@ -77,10 +79,12 @@ namespace FDG.types
                 }
                 else
                 {
-                    var rnd = new Random();
-                    var x = rnd.Next(NodeSize / 2, size.Width - NodeSize);
-                    var y = rnd.Next(NodeSize / 2, (int)(size.Height - NodeSize * 1.5));
-                    node.Position = new Vector2(x, y);
+                    //var rnd = new Random();
+                    //var x = rnd.Next(NodeSize / 2, size.Width - NodeSize);
+                    //var y = rnd.Next(NodeSize / 2, (int)(size.Height - NodeSize * 1.5));
+                    //node.Position = new Vector2(x, y);
+                    node.Position = new Vector2(size.Width / 2, size.Height / 2);
+                    node.Pinned = true;
                 }
             }
         }
@@ -97,7 +101,7 @@ namespace FDG.types
                     var cNode = FindOrCreate(child);
                     Nodes.Add(cNode);
                     Links = [.. Links, new Link(parent, cNode)];
-                    Console.WriteLine($"Constructor: {Links}");
+                    //Console.WriteLine($"Constructor: {Links}");
                 }
             }
         }
